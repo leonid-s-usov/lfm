@@ -30,6 +30,14 @@ Only got a single file? No problemo:
 $ lfm deploy awesome-sauce.js --role execution_role_arn
 ```
 
+You can even deploy straight from GitHub Gists:
+
+```bash
+$ lfm deploy gist:willyg302/560ab5d328b37d2cd4cc --role execution_role_arn
+```
+
+If you haven't already guessed by now, your Gist can be a [single file](https://gist.github.com/willyg302/25b8f32e6784aca03a27) or [multiple files](https://gist.github.com/willyg302/560ab5d328b37d2cd4cc).
+
 In addition, you can override any of the usual config (see `lfm deploy -h` for options).
 
 ## So What's the Secret?
@@ -91,7 +99,6 @@ If, like Rust, lfm decides to [eat your laundry](https://github.com/rust-lang/ru
 
 Don't fret, we hear you! There are currently plans for the following features:
 
-- **GitHub Gists**: Give a Gist URL, get a running Lambda function
 - **Webhooks**: A bit far-fetched, but wouldn't it be cool to `git push` and kick off a Lambda deploy?
 
 ## Testing

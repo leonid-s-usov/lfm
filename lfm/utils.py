@@ -1,9 +1,11 @@
 import contextlib
+import json
 import os
 import shlex
 import shutil
 import subprocess
 import sys
+import urllib2
 
 import yaml
 
@@ -72,3 +74,20 @@ def make_zip(name):
 
 def shell(command):
 	return subprocess.call(shlex.split(command))
+
+
+########################################
+# GIST
+########################################
+
+# Returns a list of files in the Gist
+def download_gist(gid, dest):
+	req = urllib2.Request('https://api.github.com/gists/{}'.format(gid))
+	res = json.loads(urllib2.urlopen(req).read())
+	ret = []
+	for k, v in iteritems(res['files']):
+		ret.append(k)
+		print os.path.join(dest, k)
+		with open(os.path.join(dest, k), 'w') as f:
+			f.write(v['content'])
+	return ret

@@ -27,7 +27,7 @@ def deploy_dir(path, kwargs):
 		if 'FunctionName' not in config['config']:
 			clip.exit('You must provide a function name', err=True)
 		# Remove ignore paths
-		for e in config['ignore'] + ['.git/', '.gitignore']:
+		for e in config.get('ignore', []) + ['.git/', '.gitignore']:
 			utils.delete_resource(e)
 		# Run install command
 		if 'install' in config:
@@ -55,12 +55,29 @@ def run(path, kwargs):
 		tmpdir = tempfile.mkdtemp()
 		g = GitURL(path)
 		if g.valid:
-			# Git repo
-			url = g.to_ssh()
-			dest = os.path.join(tmpdir, g.repo)
-			clip.echo('Cloning git repo "{}" to "{}"...'.format(url, dest))
-			git.Repo.clone_from(url, dest)
-			deploy_dir(dest, kwargs)
+			if g.is_a('gist'):
+				# GitHub Gist
+				gid = g.repo
+				dest = tmpdir
+				clip.echo('Downloading Gist {} to "{}"...'.format(gid, dest))
+				files = utils.download_gist(gid, dest)
+				if len(files) == 1:
+					# Single file Gist
+					parsed_dest = os.path.join(tmpdir, files[0])
+					parsed = frontmatter.load(parsed_dest)
+					with open(parsed_dest, 'w') as f:
+						f.write(parsed.content)
+					deploy_file(parsed_dest, kwargs, parsed.metadata)
+				else:
+					# Multi-file Gist
+					deploy_dir(dest, kwargs)
+			else:
+				# Git repo
+				url = g.to_ssh()
+				dest = os.path.join(tmpdir, g.repo)
+				clip.echo('Cloning Git repo "{}" to "{}"...'.format(url, dest))
+				git.Repo.clone_from(url, dest)
+				deploy_dir(dest, kwargs)
 		elif os.path.isdir(path):
 			# Directory
 			dest = os.path.join(tmpdir, os.path.basename(path))
@@ -75,6 +92,11 @@ def run(path, kwargs):
 			with open(dest, 'w') as f:
 				f.write(parsed.content)
 			deploy_file(dest, kwargs, parsed.metadata)
+	except Exception as e:
+		clip.echo('Deployment failed.', err=True)
+		raise e
+	else:
+		clip.echo('Lambda function successfully deployed!')
 	finally:
 		# Clean up our temporary working directory
 		if tmpdir:
