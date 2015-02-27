@@ -87,7 +87,6 @@ def download_gist(gid, dest):
 	ret = []
 	for k, v in iteritems(res['files']):
 		ret.append(k)
-		print os.path.join(dest, k)
 		with open(os.path.join(dest, k), 'w') as f:
 			f.write(v['content'])
 	return ret

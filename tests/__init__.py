@@ -2,7 +2,7 @@ import unittest
 
 
 class BaseTest(unittest.TestCase):
-	'''Base class for tests in this file.
+	'''Base class for lfm tests.
 
 	This should:
 	  - Hold generic test apps and expected values, bound to self
@@ -11,9 +11,3 @@ class BaseTest(unittest.TestCase):
 
 	def setUp(self):
 		pass
-
-
-class TestLfm(BaseTest):
-
-	def test_dummy(self):
-		self.assertTrue(True)
