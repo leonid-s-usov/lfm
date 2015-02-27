@@ -6,7 +6,7 @@ from . import BaseTest
 from lfm import cli
 
 
-class TestUtils(BaseTest):
+class TestCli(BaseTest):
 
 	@patch('lfm.cli.clip.exit')
 	def test_version(self, clip_exit):
