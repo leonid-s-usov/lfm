@@ -105,15 +105,19 @@ regexes = {
 }
 
 def find_front_matter(s, ext):
+	if ext not in regexes:
+		return ''
 	return re.search(regexes[ext], s).group().strip()
 
-def parse_front_matter():
-	pass
+def parse_front_matter(s, ext):
+	def parse_fm_line(line):
+		line = re.sub('(\/\*|\*\/)', '', line.strip())  # Remove /*, */
+		return re.sub('^(\/\/|\*|#)', '', line, count=1)  # Remove leading //, #, *
+	fm = find_front_matter(s, ext)
+	sanitized = '\n'.join([parse_fm_line(line) for line in fm.splitlines()])
+	return yaml.load(sanitized) or {}
 
-# Find the front matter, then:
-# - Split on lines and for each line:
-#   - strip()
-#   - Replace /*, */
-#   - Replace leading # or *
-# - Join by newline
-# Parse as YAML
+def load_front_matter(path):
+	_, ext = os.path.splitext(path)
+	with open(path, 'r') as f:
+		return parse_front_matter(f.read(), ext[1:])

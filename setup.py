@@ -32,7 +32,6 @@ setup(
 		'giturl.py==0.2.0',
 		'jmespath==0.6.1',
 		'python-dateutil==2.4.0',
-		'python-frontmatter==0.2.1',
 		'PyYAML==3.11',
 		'six==1.9.0',
 		'smmap==0.9.0',

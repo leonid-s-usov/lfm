@@ -68,22 +68,23 @@ ignore:
 
 ### But I Only Have One File...
 
-Cool beans. Just stick that config in your YAML front matter:
+Cool beans. Just stick that config as YAML in your front matter:
 
 ```js
----
-FunctionName: hello-world
-Handler: hello-world.handler
-Mode: event
-Runtime: nodejs
-Description: My awesome Hello World function!
----
+/**
+ * FunctionName: hello-world
+ * Handler: hello-world.handler
+ * Mode: event
+ * Runtime: nodejs
+ * Description: My awesome Hello World function!
+ */
 console.log('Loading event');
+
 exports.handler = function(event, context) {
-	console.log("value1 = " + event.key1);
-	console.log("value2 = " + event.key2);
-	console.log("value3 = " + event.key3);
-	context.done(null, "Hello World");
+    console.log("value1 = " + event.key1);
+    console.log("value2 = " + event.key2);
+    console.log("value3 = " + event.key3);
+    context.done(null, "Hello World");
 };
 ```
 

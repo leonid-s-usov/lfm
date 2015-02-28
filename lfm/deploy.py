@@ -4,7 +4,6 @@ import tempfile
 
 import boto3
 import clip
-import frontmatter
 import git
 from giturl import *
 
@@ -12,11 +11,14 @@ import utils
 
 
 def upload(zipfile, params):
+	clip.echo('Deploying function "{}"...'.format(params['FunctionName']))
 	client = boto3.client('lambda')
 	with open(zipfile + ".zip", 'rb') as f:
 		params['FunctionZip'] = f
 		try:
 			response = client.upload_function(**params)
+			clip.echo('Response: {}'.format(response['ResponseMetadata']['HTTPStatusCode']))
+			clip.echo('ARN: {}'.format(response['FunctionARN']))
 		except Exception as e:
 			clip.exit(e, err=True)
 
@@ -64,10 +66,8 @@ def run(path, kwargs):
 				if len(files) == 1:
 					# Single file Gist
 					parsed_dest = os.path.join(tmpdir, files[0])
-					parsed = frontmatter.load(parsed_dest)
-					with open(parsed_dest, 'w') as f:
-						f.write(parsed.content)
-					deploy_file(parsed_dest, kwargs, parsed.metadata)
+					parsed = utils.load_front_matter(parsed_dest)
+					deploy_file(parsed_dest, kwargs, parsed)
 				else:
 					# Multi-file Gist
 					deploy_dir(dest, kwargs)
@@ -87,11 +87,10 @@ def run(path, kwargs):
 		else:
 			# File
 			dest = os.path.join(tmpdir, os.path.basename(path))
-			parsed = frontmatter.load(path)
+			parsed = utils.load_front_matter(path)
 			clip.echo('Copying file "{}" to "{}"...'.format(path, dest))
-			with open(dest, 'w') as f:
-				f.write(parsed.content)
-			deploy_file(dest, kwargs, parsed.metadata)
+			shutil.copyfile(path, dest)
+			deploy_file(dest, kwargs, parsed)
 	except Exception as e:
 		clip.echo('Deployment failed.', err=True)
 		raise e

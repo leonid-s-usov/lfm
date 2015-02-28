@@ -58,50 +58,42 @@ class TestUtils(BaseTest):
 			write.assert_any_call('baz')
 			write.assert_any_call('qux')
 
+
+class TestFrontMatter(BaseTest):
+
+	fixtures = [
+		'fm-js-1.js',          # JavaScript single-line comment block
+		'fm-js-2.js',          # JavaScript multi-line comment
+		'fm-js-3.js',          # JavaScript multi-line sanity check
+		'fm-coffee-1.coffee',  # CoffeeScript
+	]
+
+	def _find_fm_test(self, name):
+		prefix, ext = os.path.splitext(name)
+		actual = self.load_fixture(name)
+		expected = self.load_fixture('{}-find-expected{}'.format(prefix, ext))
+		self.assertEqual(utils.find_front_matter(actual, ext[1:]), expected)
+
+	def _parse_fm_test(self, name):
+		prefix, ext = os.path.splitext(name)
+		actual = self.load_fixture(name)
+		expected = json.loads(self.load_fixture('fm-parse-expected.json'))
+		self.assertEqual(utils.parse_front_matter(actual, ext[1:]), expected)
+
 	def test_find_front_matter(self):
-		# JavaScript single-line comment block
-		self.assertEqual(utils.find_front_matter('''
-// This is a test
-// So is this
-// Cool beans bro!
-Bunnies!
+		for fixture in self.fixtures:
+			self._find_fm_test(fixture)
 
-// Other stuff''', 'js'), '''// This is a test
-// So is this
-// Cool beans bro!''')
-		# JavaScript multi-line comment
-		self.assertEqual(utils.find_front_matter('''/*
-This is a test
-So is this
-Cool beans bro!
-*/
-Bunnies!
+	def test_parse_front_matter(self):
+		for fixture in self.fixtures:
+			self._parse_fm_test(fixture)
 
-/* Never gonna match you up */''', 'js'), '''/*
-This is a test
-So is this
-Cool beans bro!
-*/''')
-		# JavaScript multi-line sanity check
-		self.assertEqual(utils.find_front_matter('''
+	def test_load_front_matter(self):
+		expected = json.loads(self.load_fixture('fm-parse-expected.json'))
+		for fixture in self.fixtures:
+			self.assertEqual(utils.load_front_matter(self.get_fixture_path(fixture)), expected)
 
-/**
- *This is a test
- *So is this
- *Cool beans bro!
- */
-Bunnies!''', 'js'), '''/**
- *This is a test
- *So is this
- *Cool beans bro!
- */''')
-		# CoffeeScript
-		self.assertEqual(utils.find_front_matter('''
-# This is a test
-# So is this
-// Haha ur funny
-Bunnies!
-
-# Other stuff
-''', 'coffee'), '''# This is a test
-# So is this''')
+	def test_front_matter_errors(self):
+		# Unrecognized file extension
+		self.assertEqual(utils.find_front_matter('boop', '.cake'), '')
+		self.assertEqual(utils.parse_front_matter('boop', '.cake'), {})
