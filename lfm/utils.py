@@ -1,6 +1,7 @@
 import contextlib
 import json
 import os
+import re
 import shlex
 import shutil
 import subprocess
@@ -90,3 +91,29 @@ def download_gist(gid, dest):
 		with open(os.path.join(dest, k), 'w') as f:
 			f.write(v['content'])
 	return ret
+
+
+########################################
+# FRONT MATTER PARSING
+########################################
+
+# Hey I know, let's parse comments with REGEX! That'll be fun!
+#   - No one, ever (and yet here we are...)
+regexes = {
+	'js': re.compile('\s*(\/\*([\S\s]*?)\*\/|(\/\/(.+?)$\s)*)', re.MULTILINE),
+	'coffee': re.compile('\s*((#(.+?)$\s)*)', re.MULTILINE),
+}
+
+def find_front_matter(s, ext):
+	return re.search(regexes[ext], s).group().strip()
+
+def parse_front_matter():
+	pass
+
+# Find the front matter, then:
+# - Split on lines and for each line:
+#   - strip()
+#   - Replace /*, */
+#   - Replace leading # or *
+# - Join by newline
+# Parse as YAML

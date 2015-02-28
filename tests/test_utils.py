@@ -57,3 +57,51 @@ class TestUtils(BaseTest):
 			write = file_mock().write
 			write.assert_any_call('baz')
 			write.assert_any_call('qux')
+
+	def test_find_front_matter(self):
+		# JavaScript single-line comment block
+		self.assertEqual(utils.find_front_matter('''
+// This is a test
+// So is this
+// Cool beans bro!
+Bunnies!
+
+// Other stuff''', 'js'), '''// This is a test
+// So is this
+// Cool beans bro!''')
+		# JavaScript multi-line comment
+		self.assertEqual(utils.find_front_matter('''/*
+This is a test
+So is this
+Cool beans bro!
+*/
+Bunnies!
+
+/* Never gonna match you up */''', 'js'), '''/*
+This is a test
+So is this
+Cool beans bro!
+*/''')
+		# JavaScript multi-line sanity check
+		self.assertEqual(utils.find_front_matter('''
+
+/**
+ *This is a test
+ *So is this
+ *Cool beans bro!
+ */
+Bunnies!''', 'js'), '''/**
+ *This is a test
+ *So is this
+ *Cool beans bro!
+ */''')
+		# CoffeeScript
+		self.assertEqual(utils.find_front_matter('''
+# This is a test
+# So is this
+// Haha ur funny
+Bunnies!
+
+# Other stuff
+''', 'coffee'), '''# This is a test
+# So is this''')
