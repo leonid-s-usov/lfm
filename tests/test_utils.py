@@ -27,13 +27,6 @@ class TestUtils(BaseTest):
 			self.assertEqual(os.getcwd(), os.path.join(cwd, 'tests'))
 		self.assertEqual(os.getcwd(), cwd)
 
-	def test_load_config(self):
-		# If no config is present
-		self.assertEqual(utils.load_config(), {
-			'config': {},
-			'ignore': []
-		})
-
 	@patch('lfm.utils.os.path.isfile', side_effect=[True, False])
 	@patch('lfm.utils.os.path.isdir', side_effect=[True])
 	@patch('lfm.utils.os.remove')

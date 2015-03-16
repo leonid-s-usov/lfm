@@ -12,9 +12,6 @@ import urllib2
 import yaml
 
 
-CONFIG = '.lambda.yml'
-
-
 class LfmException(Exception):
 	pass
 
@@ -48,15 +45,6 @@ def directory(path):
 		yield
 	finally:
 		os.chdir(prev_cwd)
-
-def load_config():
-	if not os.path.isfile(CONFIG):
-		return {
-			'config': {},
-			'ignore': []
-		}
-	with open(CONFIG, 'r') as f:
-		return yaml.load(f)
 
 def delete_resource(path):
 	path = normalize_path(path)

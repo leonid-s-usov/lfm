@@ -91,6 +91,24 @@ exports.handler = function(event, context) {
 
 Save this in `hello-world.js` and you're good to go! It's probably worth mentioning that since you have just a single file, you won't be doing any installing or ignoring of files or anything like that.
 
+### But Roles Are So *Annoying*...
+
+Wish you didn't have to type the role every time? It's a bad idea to include the role in your `.lambda.yml` or front matter for security reasons, but we've got you covered with one extra layer of config:
+
+```yaml
+# Save this in ~/.aws/lambda.yml
+roles:
+  default: arn:aws:iam::some-role
+  bunnies: arn:aws:iam::a-much-fluffier-role
+```
+
+Now you can rest those poor fingertips of yours:
+
+```bash
+$ lfm deploy awesome-sauce.js  # Will use default role
+$ lfm deploy awesome-sauce.js -r bunnies  # You guessed it!
+```
+
 ## Okay, I'm Sold, Gimme!
 
 lfm is still in early development, so don't expect to be finding it on PyPI. You can grab it with a quick `pip install git+https://github.com/willyg302/lfm.git@master`.
