@@ -6,6 +6,7 @@ import shlex
 import shutil
 import subprocess
 import sys
+import textwrap
 import urllib2
 
 import yaml
@@ -111,10 +112,10 @@ def find_front_matter(s, ext):
 
 def parse_front_matter(s, ext):
 	def parse_fm_line(line):
-		line = re.sub('(\/\*|\*\/)', '', line.strip())  # Remove /*, */
-		return re.sub('^(\/\/|\*|#)', '', line, count=1)  # Remove leading //, #, *
+		line = re.sub('(\/\*|\*\/)', '', line)  # Remove /*, */
+		return re.sub('(\/\/|\*|#)', '', line, count=1)  # Remove leading //, #, *
 	fm = find_front_matter(s, ext)
-	sanitized = '\n'.join([parse_fm_line(line) for line in fm.splitlines()])
+	sanitized = textwrap.dedent('\n'.join([parse_fm_line(line) for line in fm.splitlines()]))
 	return yaml.load(sanitized) or {}
 
 def load_front_matter(path):

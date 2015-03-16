@@ -72,11 +72,12 @@ Cool beans. Just stick that config as YAML in your front matter:
 
 ```js
 /**
- * FunctionName: hello-world
- * Handler: hello-world.handler
- * Mode: event
- * Runtime: nodejs
- * Description: My awesome Hello World function!
+ * config:
+ *   FunctionName: hello-world
+ *   Handler: hello-world.handler
+ *   Mode: event
+ *   Runtime: nodejs
+ *   Description: My awesome Hello World function!
  */
 console.log('Loading event');
 
@@ -88,7 +89,7 @@ exports.handler = function(event, context) {
 };
 ```
 
-Save this in `hello-world.js` and you're good to go! It's probably worth mentioning that since you have just a single file, you won't be doing any installing or ignoring of files or anything like that. So the only stuff that goes in the YAML is what you'd pass to `upload-function`.
+Save this in `hello-world.js` and you're good to go! It's probably worth mentioning that since you have just a single file, you won't be doing any installing or ignoring of files or anything like that.
 
 ## Okay, I'm Sold, Gimme!
 

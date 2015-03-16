@@ -8,10 +8,13 @@ import git
 from giturl import *
 
 import utils
+from lambda_config import LambdaConfig
 
 
-def upload(zipfile, params):
-	clip.echo('Deploying function "{}"...'.format(params['FunctionName']))
+def upload(params):
+	zipfile = params['FunctionName']
+	utils.make_zip(zipfile)  # Zip up directory
+	clip.echo('Deploying function "{}"...'.format(zipfile))
 	client = boto3.client('lambda')
 	with open(zipfile + ".zip", 'rb') as f:
 		params['FunctionZip'] = f
@@ -24,31 +27,52 @@ def upload(zipfile, params):
 
 def deploy_dir(path, kwargs):
 	with utils.directory(path):
-		config = utils.load_config()
-		config['config'].update(kwargs)
-		if 'FunctionName' not in config['config']:
-			clip.exit('You must provide a function name', err=True)
+		config = LambdaConfig().load_from_cwd().update_config(kwargs)
+		config.verify()
 		# Remove ignore paths
 		for e in config.get('ignore', []) + ['.git/', '.gitignore']:
 			utils.delete_resource(e)
 		# Run install command
 		if 'install' in config:
-			utils.shell(config['install'])
-		# Zip up directory
-		utils.make_zip(config['config']['FunctionName'])
-		# Upload!
-		params = config['config']
-		upload(params['FunctionName'], params)
+			utils.shell(config.get('install'))
+		upload(config.get_config())
 
-def deploy_file(path, kwargs, config):
+def deploy_file(path, kwargs):
 	with utils.directory(os.path.dirname(path)):
-		config.update(kwargs)
-		if 'FunctionName' not in config:
-			clip.exit('You must provide a function name', err=True)
-		# Zip up directory
-		utils.make_zip(config['FunctionName'])
-		# Upload!
-		upload(config['FunctionName'], config)
+		config = LambdaConfig().load_from_front_matter(path).update_config(kwargs)
+		config.verify()
+		upload(config.get_config())
+
+
+########################################
+# FUNCTION FORMAT HANDLERS
+########################################
+
+def handle_gist(gid, dest, kwargs):
+	clip.echo('Downloading Gist {} to "{}"...'.format(gid, dest))
+	files = utils.download_gist(gid, dest)
+	if len(files) == 1:
+		# Single file Gist
+		deploy_file(os.path.join(dest, files[0]), kwargs)
+	else:
+		# Multi-file Gist
+		deploy_dir(dest, kwargs)
+
+def handle_repo(url, dest, kwargs):
+	clip.echo('Cloning Git repo "{}" to "{}"...'.format(url, dest))
+	git.Repo.clone_from(url, dest)
+	deploy_dir(dest, kwargs)
+
+def handle_directory(path, dest, kwargs):
+	clip.echo('Copying directory "{}" to "{}"...'.format(path, dest))
+	shutil.copytree(path, dest)
+	deploy_dir(dest, kwargs)
+
+def handle_file(path, dest, kwargs):
+	clip.echo('Copying file "{}" to "{}"...'.format(path, dest))
+	shutil.copyfile(path, dest)
+	deploy_file(dest, kwargs)
+
 
 def run(path, kwargs):
 	# Create a temporary working directory
@@ -58,39 +82,13 @@ def run(path, kwargs):
 		g = GitURL(path)
 		if g.valid:
 			if g.is_a('gist'):
-				# GitHub Gist
-				gid = g.repo
-				dest = tmpdir
-				clip.echo('Downloading Gist {} to "{}"...'.format(gid, dest))
-				files = utils.download_gist(gid, dest)
-				if len(files) == 1:
-					# Single file Gist
-					parsed_dest = os.path.join(tmpdir, files[0])
-					parsed = utils.load_front_matter(parsed_dest)
-					deploy_file(parsed_dest, kwargs, parsed)
-				else:
-					# Multi-file Gist
-					deploy_dir(dest, kwargs)
+				m, src, dest = handle_gist, g.repo, tmpdir
 			else:
-				# Git repo
-				url = g.to_ssh()
-				dest = os.path.join(tmpdir, g.repo)
-				clip.echo('Cloning Git repo "{}" to "{}"...'.format(url, dest))
-				git.Repo.clone_from(url, dest)
-				deploy_dir(dest, kwargs)
-		elif os.path.isdir(path):
-			# Directory
-			dest = os.path.join(tmpdir, os.path.basename(path))
-			clip.echo('Copying directory "{}" to "{}"...'.format(path, dest))
-			shutil.copytree(path, dest)
-			deploy_dir(dest, kwargs)
+				m, src, dest = handle_repo, g.to_ssh(), os.path.join(tmpdir, g.repo)
 		else:
-			# File
-			dest = os.path.join(tmpdir, os.path.basename(path))
-			parsed = utils.load_front_matter(path)
-			clip.echo('Copying file "{}" to "{}"...'.format(path, dest))
-			shutil.copyfile(path, dest)
-			deploy_file(dest, kwargs, parsed)
+			m = handle_directory if os.path.isdir(path) else handle_file
+			src, dest = path, os.path.join(tmpdir, os.path.basename(path))
+		m(src, dest, kwargs)
 	except Exception as e:
 		clip.echo('Deployment failed.', err=True)
 		raise e
