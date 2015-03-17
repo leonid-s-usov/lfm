@@ -19,6 +19,20 @@ def load_yaml(path, default={}):
 
 
 class LambdaConfig:
+	'''Manages configuration information for a Lambda function.
+
+	Config may come from several sources:
+	  - Global config in ~/.aws/lambda.yml
+	  - Local project-specific .lambda.yml or front matter
+	  - Command line arguments
+
+	Keys should take precedence in the order above; e.g. command line
+	arguments should be applied last and override previous config settings.
+
+	Note that a LambdaConfig object itself holds a key called `config`
+	that contains information one would normally pass to the AWS CLI.
+	Do not confuse this with other mentions of configuration in general.
+	'''
 
 	def __init__(self):
 		self._config = {}
@@ -61,6 +75,8 @@ class LambdaConfig:
 		return self
 
 	def verify(self):
+		if self.get_config() is None:
+			clip.exit('Configuration has not been specified!', err=True)
 		if 'FunctionName' not in self.get_config():
 			clip.exit('You must provide a function name', err=True)
 		# Fill in from global config
