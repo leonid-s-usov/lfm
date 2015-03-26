@@ -9,6 +9,7 @@ import sys
 import textwrap
 import urllib2
 
+import boto3
 import yaml
 
 
@@ -79,6 +80,31 @@ def download_gist(gid, dest):
 		ret.append(k)
 		with open(os.path.join(dest, k), 'w') as f:
 			f.write(v['content'])
+	return ret
+
+
+########################################
+# S3
+########################################
+
+# Returns a list of files downloaded
+def download_s3(path, dest):
+	ret = []
+	bucket, subpath = path.split('/', 1) if '/' in path else (path, '')
+	for e in boto3.resource('s3').Bucket(bucket).objects.all():
+		if e.key.startswith(subpath):
+			if e.key != subpath:
+				resource = e.key.replace(subpath, '', 1)
+				# Strip leading slash, if any
+				if resource.startswith('/'):
+					resource = resource[1:]
+			else:
+				resource = e.key
+			ret.append(resource)
+			body = e.get()['Body']
+			with open(os.path.join(dest, resource), 'wb') as f:
+				for chunk in iter(lambda: body.read(4096), b''):
+					f.write(chunk)
 	return ret
 
 

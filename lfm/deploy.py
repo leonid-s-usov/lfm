@@ -73,6 +73,16 @@ def handle_file(path, dest, kwargs):
 	shutil.copyfile(path, dest)
 	deploy_file(dest, kwargs)
 
+def handle_s3(path, dest, kwargs):
+	clip.echo('Downloading S3 resources at {} to "{}"...'.format(path, dest))
+	files = utils.download_s3(path, dest)
+	if len(files) == 1:
+		# Single resource
+		deploy_file(os.path.join(dest, files[0]), kwargs)
+	else:
+		# Multiple resources
+		deploy_dir(dest, kwargs)
+
 
 def run(path, kwargs):
 	# Create a temporary working directory
@@ -85,6 +95,8 @@ def run(path, kwargs):
 				m, src, dest = handle_gist, g.repo, tmpdir
 			else:
 				m, src, dest = handle_repo, g.to_ssh(), os.path.join(tmpdir, g.repo)
+		elif path.startswith('s3:'):
+			m, src, dest = handle_s3, path[3:], tmpdir
 		else:
 			m = handle_directory if os.path.isdir(path) else handle_file
 			src, dest = path, os.path.join(tmpdir, os.path.basename(path))
