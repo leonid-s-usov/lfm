@@ -12,37 +12,30 @@ You're probably wondering what lfm is good for. Well, suppose you wake up one da
 Normally you'd have to clone the repo, install its dependencies, zip it up, and deploy it yourself. But with lfm, you can just do:
 
 ```bash
-$ lfm deploy gh:willyg302/aws-lambda-aes --role execution_role_arn
+$ lfm deploy gh:willyg302/aws-lambda-aes
 ```
 
 ## What?! No Way!
 
-Yup, and it works with local directories too:
+Yup, and it works with a few other things, too:
 
-```bash
-$ lfm deploy my-sweet-function/ --role execution_role_arn
-$ lfm deploy --role execution_role_arn  # Will deploy working directory
-```
-
-Only got a single file? No problemo:
-
-```bash
-$ lfm deploy awesome-sauce.js --role execution_role_arn
-```
-
-You can even deploy straight from GitHub Gists:
-
-```bash
-$ lfm deploy gist:willyg302/560ab5d328b37d2cd4cc --role execution_role_arn
-```
-
-If you haven't already guessed by now, your Gist can be a [single file](https://gist.github.com/willyg302/25b8f32e6784aca03a27) or [multiple files](https://gist.github.com/willyg302/560ab5d328b37d2cd4cc).
+Source | Command
+--- | ---
+**Git repo** | We just covered this, bro
+**GitHub Gist**, [1 file](https://gist.github.com/willyg302/25b8f32e6784aca03a27) | `lfm deploy gist:willyg302/25b8f32e6784aca03a27`
+**GitHub Gist**, [2+ files](https://gist.github.com/willyg302/560ab5d328b37d2cd4cc) | `lfm deploy gist:willyg302/560ab5d328b37d2cd4cc`
+**Local file** | `lfm deploy awesome-sauce.js`
+**Local directory** | `lfm deploy my-sweet-function/`
+**Working directory** | `lfm deploy`
+**S3 bucket** | `lfm deploy s3:mah-bucket`
+**File on S3** | `lfm deploy s3:mah-bucket/hello-world.js`
+**Directory on S3** | `lfm deploy s3:mah-bucket/my-function`
 
 In addition, you can override any of the usual config (see `lfm deploy -h` for options).
 
 ## So What's the Secret?
 
-The magic of lfm is a special file called `.lambda.yml` at the root of a repo or directory. It looks something like this:
+Glad you asked! The magic of lfm is a special file called `.lambda.yml` at the root of a repo or directory. It looks something like this:
 
 ```yaml
 config:
@@ -107,6 +100,7 @@ Now you can rest those poor fingertips of yours:
 ```bash
 $ lfm deploy awesome-sauce.js  # Will use default role
 $ lfm deploy awesome-sauce.js -r bunnies  # You guessed it!
+$ lfm deploy awesome-sauce.js --role arn:aws:iam::blahblah  # If you really want to...
 ```
 
 ## Okay, I'm Sold, Gimme!
@@ -119,6 +113,7 @@ If, like Rust, lfm decides to [eat your laundry](https://github.com/rust-lang/ru
 
 Don't fret, we hear you! There are currently plans for the following features:
 
+- **A Site**: All fancy-shmancy and such, so you can search for functions and be all social from the comfort of your browser.
 - **Webhooks**: A bit far-fetched, but wouldn't it be cool to `git push` and kick off a Lambda deploy?
 
 ## Testing
