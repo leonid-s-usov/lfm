@@ -1,4 +1,5 @@
 import os
+import clip
 
 from mock import patch
 
@@ -29,3 +30,16 @@ class TestCli(BaseTest):
 			'Handler': 'index.handler',
 			'Timeout': 256
 		})
+
+	@patch('lfm.cli.clip.echo')
+	@patch('lfm.cli.download.run')
+	def test_download(self, run, _):
+		# URI required
+		with self.assertRaises(clip.ClipExit):
+			cli.app.run('download')
+		# Default dest
+		cli.app.run('download something')
+		run.assert_called_with('something', os.getcwd())
+		# Specified dest
+		cli.app.run('download something -d here')
+		run.assert_called_with('something', 'here')

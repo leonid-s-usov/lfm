@@ -1,12 +1,12 @@
 import os
 import shutil
 import tempfile
+from distutils import dir_util
 
 import boto3
 import clip
-import git
-from giturl import *
 
+import download
 import utils
 from lambda_config import LambdaConfig
 
@@ -44,63 +44,33 @@ def deploy_file(path, kwargs):
 		upload(config.get_config())
 
 
-########################################
-# FUNCTION FORMAT HANDLERS
-########################################
-
-def handle_gist(gid, dest, kwargs):
-	clip.echo('Downloading Gist {} to "{}"...'.format(gid, dest))
-	files = utils.download_gist(gid, dest)
-	if len(files) == 1:
-		# Single file Gist
-		deploy_file(os.path.join(dest, files[0]), kwargs)
-	else:
-		# Multi-file Gist
-		deploy_dir(dest, kwargs)
-
-def handle_repo(url, dest, kwargs):
-	clip.echo('Cloning Git repo "{}" to "{}"...'.format(url, dest))
-	git.Repo.clone_from(url, dest)
+def handle_directory(uri, dest, kwargs):
+	clip.echo('Copying directory "{}" to "{}"...'.format(uri, dest))
+	dir_util.copy_tree(uri, dest)
 	deploy_dir(dest, kwargs)
 
-def handle_directory(path, dest, kwargs):
-	clip.echo('Copying directory "{}" to "{}"...'.format(path, dest))
-	shutil.copytree(path, dest)
-	deploy_dir(dest, kwargs)
-
-def handle_file(path, dest, kwargs):
-	clip.echo('Copying file "{}" to "{}"...'.format(path, dest))
-	shutil.copyfile(path, dest)
+def handle_file(uri, dest, kwargs):
+	dest = os.path.join(dest, os.path.basename(uri))
+	clip.echo('Copying file "{}" to "{}"...'.format(uri, dest))
+	shutil.copyfile(uri, dest)
 	deploy_file(dest, kwargs)
 
-def handle_s3(path, dest, kwargs):
-	clip.echo('Downloading S3 resources at {} to "{}"...'.format(path, dest))
-	files = utils.download_s3(path, dest)
+def handle_download(uri, dest, kwargs):
+	files = download.run(uri, dest)
 	if len(files) == 1:
-		# Single resource
 		deploy_file(os.path.join(dest, files[0]), kwargs)
 	else:
-		# Multiple resources
 		deploy_dir(dest, kwargs)
 
 
-def run(path, kwargs):
+def run(uri, kwargs):
 	# Create a temporary working directory
 	tmpdir = None
 	try:
 		tmpdir = tempfile.mkdtemp()
-		g = GitURL(path)
-		if g.valid:
-			if g.is_a('gist'):
-				m, src, dest = handle_gist, g.repo, tmpdir
-			else:
-				m, src, dest = handle_repo, g.to_ssh(), os.path.join(tmpdir, g.repo)
-		elif path.startswith('s3:'):
-			m, src, dest = handle_s3, path[3:], tmpdir
-		else:
-			m = handle_directory if os.path.isdir(path) else handle_file
-			src, dest = path, os.path.join(tmpdir, os.path.basename(path))
-		m(src, dest, kwargs)
+		uri_type = utils.uri_type(uri)
+		handler = uri_type if uri_type in ['directory', 'file'] else 'download'
+		globals()['handle_{}'.format(handler)](uri, tmpdir, kwargs)
 	except Exception as e:
 		clip.echo('Deployment failed.', err=True)
 		raise e

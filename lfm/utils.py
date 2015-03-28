@@ -1,5 +1,4 @@
 import contextlib
-import json
 import os
 import re
 import shlex
@@ -7,10 +6,10 @@ import shutil
 import subprocess
 import sys
 import textwrap
-import urllib2
 
-import boto3
+import clip
 import yaml
+from giturl import *
 
 
 class LfmException(Exception):
@@ -58,6 +57,18 @@ def make_zip(name):
 	# Due to a bug in make_archive, root_dir still has to be specified
 	shutil.make_archive(name, format='zip', root_dir=os.getcwd())
 
+def uri_type(uri):
+	if os.path.isdir(uri):
+		return 'directory'
+	if os.path.isfile(uri):
+		return 'file'
+	if uri.startswith('s3:'):
+		return 's3'
+	g = GitURL(uri)
+	if g.valid:
+		return 'gist' if g.is_a('gist') else 'repo'
+	clip.exit('Unrecognized URI', err=True)
+
 
 ########################################
 # SHELL
@@ -65,47 +76,6 @@ def make_zip(name):
 
 def shell(command):
 	return subprocess.call(shlex.split(command))
-
-
-########################################
-# GIST
-########################################
-
-# Returns a list of files in the Gist
-def download_gist(gid, dest):
-	req = urllib2.Request('https://api.github.com/gists/{}'.format(gid))
-	res = json.loads(urllib2.urlopen(req).read())
-	ret = []
-	for k, v in iteritems(res['files']):
-		ret.append(k)
-		with open(os.path.join(dest, k), 'w') as f:
-			f.write(v['content'])
-	return ret
-
-
-########################################
-# S3
-########################################
-
-# Returns a list of files downloaded
-def download_s3(path, dest):
-	ret = []
-	bucket, subpath = path.split('/', 1) if '/' in path else (path, '')
-	for e in boto3.resource('s3').Bucket(bucket).objects.all():
-		if e.key.startswith(subpath):
-			if e.key != subpath:
-				resource = e.key.replace(subpath, '', 1)
-				# Strip leading slash, if any
-				if resource.startswith('/'):
-					resource = resource[1:]
-			else:
-				resource = e.key
-			ret.append(resource)
-			body = e.get()['Body']
-			with open(os.path.join(dest, resource), 'wb') as f:
-				for chunk in iter(lambda: body.read(4096), b''):
-					f.write(chunk)
-	return ret
 
 
 ########################################
