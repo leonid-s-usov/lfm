@@ -61,7 +61,8 @@ class TestLambdaConfig(BaseTest):
 			'ignore': []
 		})
 
-	def test_verify(self):
+	@patch('lfm.lambda_config.clip.echo')
+	def test_verify(self, echo):
 		with self.assertRaises(clip.ClipExit):
 			LambdaConfig().verify()
 		with self.assertRaises(clip.ClipExit):

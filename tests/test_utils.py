@@ -19,6 +19,25 @@ mock_gist = json.dumps({
 })
 
 
+class MockS3Object:
+
+	def __init__(self, _key, _body):
+		self.key = _key
+		self.m = Mock()
+		self.m.read.side_effect = [_body, '']
+
+	def get(self):
+		return {
+			'Body': self.m
+		}
+
+mock_s3 = [
+	MockS3Object('foo/a', 'foo a body'),
+	MockS3Object('foo/b/c', 'foo nested body'),
+	MockS3Object('foo', 'It was the best of times')
+]
+
+
 class TestUtils(BaseTest):
 
 	def test_directory(self):
@@ -50,6 +69,22 @@ class TestUtils(BaseTest):
 			write = file_mock().write
 			write.assert_any_call('baz')
 			write.assert_any_call('qux')
+
+	@patch('lfm.utils.boto3')
+	def test_download_s3(self, boto):
+		m = Mock()
+		m.objects.all.return_value = mock_s3
+		boto.resource.return_value.Bucket.return_value = m
+		with patch('__builtin__.open', mock_open()) as file_mock:
+			ret = utils.download_s3('my_bucket/foo', 'some/dir')
+			self.assertEqual(ret, ['a', 'b/c', 'foo'])
+			file_mock.assert_any_call('some/dir/a', 'wb')
+			file_mock.assert_any_call('some/dir/b/c', 'wb')
+			file_mock.assert_any_call('some/dir/foo', 'wb')
+			write = file_mock().write
+			write.assert_any_call('foo a body')
+			write.assert_any_call('foo nested body')
+			write.assert_any_call('It was the best of times')
 
 
 class TestFrontMatter(BaseTest):
