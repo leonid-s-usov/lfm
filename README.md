@@ -118,4 +118,6 @@ Don't fret, we hear you! There are currently plans for the following features:
 
 ## Testing
 
-Call tests with `python setup.py test`.
+Run unit tests with `python setup.py test`.
+
+Run integration tests with `python integ`. See [`integ/__init__.py`](https://github.com/willyg302/lfm/blob/master/integ/__init__.py) for more information.
