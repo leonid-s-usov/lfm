@@ -17,11 +17,13 @@ def upload(params):
 	clip.echo('Deploying function "{}"...'.format(zipfile))
 	client = boto3.client('lambda')
 	with open(zipfile + ".zip", 'rb') as f:
-		params['FunctionZip'] = f
+		params['Code'] = {
+			'ZipFile': f.read()
+		}
 		try:
-			response = client.upload_function(**params)
+			response = client.create_function(**params)
 			clip.echo('Response: {}'.format(response['ResponseMetadata']['HTTPStatusCode']))
-			clip.echo('ARN: {}'.format(response['FunctionARN']))
+			clip.echo('ARN: {}'.format(response['FunctionArn']))
 		except Exception as e:
 			clip.exit(e, err=True)
 

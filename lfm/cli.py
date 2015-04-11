@@ -29,7 +29,6 @@ def lfm():
 @clip.opt('-n', '--name', name='FunctionName', help='Name of the function')
 @clip.opt('-r', '--role', name='Role', help='ARN of the function\'s IAM role')
 @clip.opt('-x', '--handler', name='Handler', help='Function that Lambda calls to begin execution')
-@clip.opt('-m', '--mode', name='Mode', help='How the Lambda function will be invoked')
 @clip.opt('-d', '--description', name='Description', help='A short, user-defined function description')
 @clip.opt('-t', '--runtime', name='Runtime', help='Runtime environment for the Lambda function')
 @clip.opt('-o', '--timeout', name='Timeout', type=int, help='Function execution time')

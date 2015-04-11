@@ -23,8 +23,8 @@ setup(
 	platforms='any',
 	install_requires=[
 		'bcdoc==0.12.2',
-		'boto3==0.0.9',
-		'botocore==0.92.0',
+		'boto3==0.0.14',
+		'botocore==0.102.0',
 		'clip.py==0.2.1',
 		'docutils==0.12',
 		'gitdb==0.6.4',

@@ -70,15 +70,29 @@ def lfm_deploy_test(uri, name):
 		return wrapped_f
 	return wrap
 
+def lfm_invoke(expected):
+	def wrap(f):
+		def wrapped_f(unique_name):
+			result = boto3.client('lambda').invoke(FunctionName=unique_name)
+			status = result['StatusCode']
+			payload = result['Payload'].read()
+			if status != 200:
+				raise Exception('Invoke failed with status: {}'.format(status))
+			if payload != expected:
+				raise Exception('Invoke returned {}, expected {}'.format(payload, expected))
+			f(unique_name)
+		return wrapped_f
+	return wrap
+
 
 ########################################
 # THE ACTUAL TESTS
 ########################################
 
 @lfm_deploy_test('integ/fixtures/hello-world.js', 'integ-local-file')
+@lfm_invoke('"Hello World from lfm integ!"')
 def test_local_file(unique_name):
-	# @TODO
-	print(unique_name)
+	pass
 
 
 ########################################
