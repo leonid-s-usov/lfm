@@ -41,7 +41,6 @@ Glad you asked! The magic of lfm is a special file called `.lambda.yml` at the r
 config:
   FunctionName: my-awesome-sauce-function
   Handler: index.handler
-  Mode: event
   Runtime: nodejs
   Description: This function will blow your mind
   Role: execution_role_arn  # Not recommended, especially in a public repo
@@ -68,7 +67,6 @@ Cool beans. Just stick that config as YAML in your front matter:
  * config:
  *   FunctionName: hello-world
  *   Handler: hello-world.handler
- *   Mode: event
  *   Runtime: nodejs
  *   Description: My awesome Hello World function!
  */
