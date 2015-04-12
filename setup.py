@@ -33,6 +33,7 @@ setup(
 		'jmespath==0.6.1',
 		'python-dateutil==2.4.0',
 		'PyYAML==3.11',
+		'requests==2.6.0',
 		'six==1.9.0',
 		'smmap==0.9.0',
 	],

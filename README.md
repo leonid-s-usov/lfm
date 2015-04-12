@@ -30,6 +30,7 @@ Source | Command
 **S3 bucket** | `lfm deploy s3:mah-bucket`
 **File on S3** | `lfm deploy s3:mah-bucket/hello-world.js`
 **Directory on S3** | `lfm deploy s3:mah-bucket/my-function`
+**Valid URL** | `lfm deploy http://www.my-site.com/my-function.js`
 
 In addition, you can override any of the usual config (see `lfm deploy -h` for options).
 

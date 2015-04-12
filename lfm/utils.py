@@ -8,8 +8,12 @@ import sys
 import textwrap
 
 import clip
+import requests
 import yaml
 from giturl import *
+
+
+requests.packages.urllib3.disable_warnings()
 
 
 class LfmException(Exception):
@@ -67,6 +71,11 @@ def uri_type(uri):
 	g = GitURL(uri)
 	if g.valid:
 		return 'gist' if g.is_a('gist') else 'repo'
+	try:
+		requests.get(uri)
+		return 'url'
+	except:
+		pass
 	clip.exit('Unrecognized URI', err=True)
 
 

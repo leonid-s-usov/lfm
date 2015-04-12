@@ -1,13 +1,16 @@
 import json
 import os
-import urllib2
 
 import boto3
 import clip
 import git
+import requests
 from giturl import *
 
 import utils
+
+
+requests.packages.urllib3.disable_warnings()
 
 
 # Returns a list of files in the Gist
@@ -15,8 +18,8 @@ def download_gist(uri, dest):
 	gid = GitURL(uri).repo
 	clip.echo('Downloading Gist "{}" to "{}"...'.format(gid, dest))
 	ret = []
-	req = urllib2.Request('https://api.github.com/gists/{}'.format(gid))
-	res = json.loads(urllib2.urlopen(req).read())
+	req = requests.get('https://api.github.com/gists/{}'.format(gid))
+	res = req.json()
 	for k, v in utils.iteritems(res['files']):
 		ret.append(k)
 		with open(os.path.join(dest, k), 'w') as f:
@@ -51,6 +54,16 @@ def download_s3(uri, dest):
 				for chunk in iter(lambda: body.read(4096), b''):
 					f.write(chunk)
 	return ret
+
+# Returns a list containing the single file downloaded, so upstream processing works
+def download_url(uri, dest):
+	path = uri.split('/')[-1]
+	clip.echo('Downloading file "{}" to "{}"...'.format(path, dest))
+	res = requests.get(uri, stream=True)
+	with open(os.path.join(dest, path), 'wb') as f:
+		for chunk in res.iter_content():
+			f.write(chunk)
+	return [path]
 
 
 def run(uri, dest):

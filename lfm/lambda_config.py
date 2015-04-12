@@ -35,7 +35,9 @@ class LambdaConfig:
 	'''
 
 	def __init__(self):
-		self._config = {}
+		self._config = {
+			'config': {}
+		}
 		self._global_config = load_yaml(os.path.join(os.path.expanduser('~'), '.aws', CONFIG))
 
 	def __contains__(self, key):
@@ -71,7 +73,7 @@ class LambdaConfig:
 		return self
 
 	def update_config(self, d):
-		self.get('config').update(d)
+		self.get_config().update(d)
 		return self
 
 	def verify(self):

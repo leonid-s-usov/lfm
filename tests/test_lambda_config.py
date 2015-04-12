@@ -26,6 +26,10 @@ class TestLambdaConfig(BaseTest):
 			self.assertEqual(load_yaml('nope'), {})
 			self.assertEqual(load_yaml('nope again', { 'jk': 'yes'}), { 'jk': 'yes' })
 
+	def test_initial_values(self):
+		config = LambdaConfig()
+		self.assertEqual(config.get_config(), {})
+
 	def test_getters(self):
 		config = LambdaConfig().update(mock_config)
 		self.assertTrue('joe' in config)

@@ -27,15 +27,16 @@ class TestUtils(BaseTest):
 		rmtree.assert_called_with('directory', ignore_errors=True)
 
 	@patch('lfm.utils.clip.echo')
-	@patch('lfm.utils.os.path.isfile', side_effect=[True] + [False] * 4)
-	@patch('lfm.utils.os.path.isdir', side_effect=[True] + [False] * 5)
+	@patch('lfm.utils.os.path.isfile', side_effect=[True] + [False] * 5)
+	@patch('lfm.utils.os.path.isdir', side_effect=[True] + [False] * 6)
 	def test_uri_type(self, isdir, isfile, _):
 		valid_types = [
 			('some/dir', 'directory'),
 			('some-file', 'file'),
 			('s3:bucket', 's3'),
 			('gist:user/gid', 'gist'),
-			('gh:user/repo', 'repo')
+			('gh:user/repo', 'repo'),
+			('https://www.google.com', 'url'),
 		]
 		for e in valid_types:
 			self.assertEqual(utils.uri_type(e[0]), e[1])

@@ -6,7 +6,7 @@ from . import BaseTest
 from lfm import download
 
 
-mock_gist = json.dumps({
+mock_gist = {
 	'files': {
 		'foo': {
 			'content': 'baz'
@@ -15,7 +15,7 @@ mock_gist = json.dumps({
 			'content': 'qux'
 		}
 	}
-})
+}
 
 
 class MockS3Object:
@@ -40,11 +40,11 @@ mock_s3 = [
 class TestDownload(BaseTest):
 
 	@patch('lfm.download.clip.echo')
-	@patch('lfm.download.urllib2.urlopen')
-	def test_download_gist(self, urlopen, _):
+	@patch('lfm.download.requests.get')
+	def test_download_gist(self, get, _):
 		m = Mock()
-		m.read.side_effect = [mock_gist]
-		urlopen.return_value = m
+		m.json.side_effect = [mock_gist]
+		get.return_value = m
 		with patch('__builtin__.open', mock_open()) as file_mock:
 			ret = download.download_gist('9001', 'some/dir')
 			self.assertEqual(ret, ['foo', 'bar'])
@@ -70,3 +70,5 @@ class TestDownload(BaseTest):
 			write.assert_any_call('foo a body')
 			write.assert_any_call('foo nested body')
 			write.assert_any_call('It was the best of times')
+
+	# @TODO: test_download_url()
