@@ -1,3 +1,4 @@
+import json
 import shlex
 import subprocess
 import time
@@ -49,31 +50,31 @@ def release_function(name):
 
 
 def lfm_command(command):
-	shlexed = shlex.split('/bin/bash -i -c "lfm {}"'.format(command))
+	shlexed = shlex.split('env/bin/python lfm {}'.format(command))
 	output = subprocess.check_output(shlexed, stderr=subprocess.STDOUT)
 	log_nested(output)
 
-def lfm_deploy_test(uri, name):
+def lfm_deploy_test(name, uri):
 	def wrap(f):
 		def wrapped_f():
-			integ_manager.register_test(f.__name__)
+			integ_manager.register_test(name)
 			try:
 				unique_name = '{}-{}'.format(int(time.time()), name)
 				lfm_command('deploy {} -n {}'.format(uri, unique_name))
 				f(unique_name)
-				integ_manager.register_success(f.__name__)
+				integ_manager.register_success(name)
 			except Exception as e:
 				log_fail(e)
 			finally:
-				log_info('Cleaning up: {}'.format(f.__name__))
+				log_info('Cleaning up: {}'.format(name))
 				release_function(unique_name)
 		return wrapped_f
 	return wrap
 
-def lfm_invoke(expected):
+def lfm_invoke(args, expected):
 	def wrap(f):
 		def wrapped_f(unique_name):
-			result = boto3.client('lambda').invoke(FunctionName=unique_name)
+			result = boto3.client('lambda').invoke(FunctionName=unique_name, Payload=json.dumps(args))
 			status = result['StatusCode']
 			payload = result['Payload'].read()
 			if status != 200:
@@ -89,9 +90,18 @@ def lfm_invoke(expected):
 # THE ACTUAL TESTS
 ########################################
 
-@lfm_deploy_test('integ/fixtures/hello-world.js', 'integ-local-file')
-@lfm_invoke('"Hello World from lfm integ!"')
+@lfm_deploy_test('integ-local-file', 'integ/fixtures/hello-world.js')
+@lfm_invoke({}, '"Hello World from lfm integ!"')
 def test_local_file(unique_name):
+	pass
+
+@lfm_deploy_test('integ-gist', 'gist:willyg302/560ab5d328b37d2cd4cc')
+@lfm_invoke({
+	'enc': True,
+	'message': 'Hey there',
+	'pass': 'password'
+}, '"KVQnk+5bHpt8PMsZy2DPww=="')
+def test_gist(unique_name):
 	pass
 
 
