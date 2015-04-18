@@ -17,6 +17,14 @@ def load_yaml(path, default={}):
 			ret = yaml.load(f)
 	return ret or default
 
+def dump_yaml(path, config):
+	contents = yaml.dump(config, default_flow_style=False)
+	clip.echo('\nAbout to write to {}:\n'.format(os.path.join(os.getcwd(), path)))
+	clip.echo(contents)
+	clip.confirm('Is this okay?', default='yes', abort=True)
+	with open(path, 'w') as f:
+		f.write(contents)
+
 
 class LambdaConfig:
 	'''Manages configuration information for a Lambda function.
@@ -56,6 +64,9 @@ class LambdaConfig:
 			'config': {},
 			'ignore': []
 		}))
+
+	def dump_to_cwd(self):
+		dump_yaml("." + CONFIG, self._config)
 
 	def load_from_front_matter(self, path):
 		return self.update(utils.load_front_matter(path))

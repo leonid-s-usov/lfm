@@ -43,3 +43,8 @@ class TestCli(BaseTest):
 		# Specified dest
 		cli.app.run('download something -d here')
 		run.assert_called_with('something', 'here')
+
+	@patch('lfm.cli.init.run')
+	def test_init(self, run):
+		cli.app.run('init')
+		run.assert_called_with()

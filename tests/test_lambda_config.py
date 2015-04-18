@@ -3,7 +3,7 @@ import clip
 from mock import Mock, mock_open, patch
 
 from . import BaseTest
-from lfm.lambda_config import LambdaConfig, load_yaml
+from lfm.lambda_config import LambdaConfig, load_yaml, dump_yaml
 
 
 mock_config = {
@@ -25,6 +25,15 @@ class TestLambdaConfig(BaseTest):
 			# Defaults
 			self.assertEqual(load_yaml('nope'), {})
 			self.assertEqual(load_yaml('nope again', { 'jk': 'yes'}), { 'jk': 'yes' })
+
+	@patch('lfm.lambda_config.clip.echo')
+	def test_dump_yaml(self, _):
+		with patch('__builtin__.open', mock_open()) as file_mock:
+			with self.mock_clip_input(['yes']):
+				dump_yaml('path', { 'foo': 'bar' })
+			file_mock.assert_any_call('path', 'w')
+			write = file_mock().write
+			write.assert_any_call('foo: bar\n')
 
 	def test_initial_values(self):
 		config = LambdaConfig()

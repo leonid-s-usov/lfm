@@ -4,6 +4,7 @@ import clip
 
 import deploy
 import download
+import init
 import utils
 
 
@@ -41,6 +42,10 @@ def lfm_deploy(uri, **kwargs):
 @clip.opt('-d', '--dest', default=os.getcwd(), help='Where to download the function')
 def lfm_download(uri, dest):
 	download.run(uri, dest)
+
+@lfm.subcommand(name='init', description='Interactively create a .lambda.yml file')
+def lfm_init():
+	init.run()
 
 
 ########################################
