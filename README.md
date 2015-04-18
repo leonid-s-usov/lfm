@@ -51,9 +51,9 @@ ignore:
   - README.md
 ```
 
-`config` holds all that junk you're used to passing to `upload-function`, so you don't have to type it out any more. Note that any config you provide to `lfm deploy` will override the values in this file.
+`config` holds all that junk you're used to passing to `create-function`, so you don't have to type it out any more. Note that any config you provide to `lfm deploy` will override the values in this file.
 
-`install` is a single command for installing dependencies before zipping up the function. In this example, we want to install some Node modules so we use `npm install --production`, but you can just as well shell out to `make` for more heavy lifting.
+`install` is a single command for installing dependencies before zipping up the function. In this example, we want to install some Node modules so we use `npm install --production`, but you can just as well [shell out to `make`](https://gist.github.com/willyg302/c09048aeff3ae48ddcf2) for more heavy lifting.
 
 `ignore` is a list of paths that will not be added to the zip file.
 
@@ -69,15 +69,16 @@ Cool beans. Just stick that config as YAML in your front matter:
  *   FunctionName: hello-world
  *   Handler: hello-world.handler
  *   Runtime: nodejs
- *   Description: My awesome Hello World function!
+ *   Description: A simple AWS Lambda function
  */
-console.log('Loading event');
+console.log('Loading function');
 
 exports.handler = function(event, context) {
-    console.log("value1 = " + event.key1);
-    console.log("value2 = " + event.key2);
-    console.log("value3 = " + event.key3);
-    context.done(null, "Hello World");
+    console.log('value1 =', event.key1);
+    console.log('value2 =', event.key2);
+    console.log('value3 =', event.key3);
+    context.succeed(event.key1);  // Echo back the first key value
+    // context.fail('Something went wrong');
 };
 ```
 
