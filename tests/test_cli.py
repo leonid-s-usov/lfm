@@ -15,7 +15,8 @@ class TestCli(BaseTest):
 		self.assertTrue(clip_exit.call_args[0][0].startswith('lfm version'))
 
 	@patch('lfm.cli.deploy.run')
-	def test_deploy(self, run):
+	@patch('lfm.cli.boto3.setup_default_session')
+	def test_deploy(self, profile, run):
 		# No arguments
 		cli.app.run('deploy')
 		run.assert_called_with(os.getcwd(), {})
@@ -30,10 +31,15 @@ class TestCli(BaseTest):
 			'Handler': 'index.handler',
 			'Timeout': 256
 		})
+		# Custom AWS profile
+		cli.app.run('deploy cake -p aws')
+		profile.assert_called_with(profile_name='aws')
+		run.assert_called_with('cake', {})
 
 	@patch('lfm.cli.clip.echo')
 	@patch('lfm.cli.download.run')
-	def test_download(self, run, _):
+	@patch('lfm.cli.boto3.setup_default_session')
+	def test_download(self, profile, run, _):
 		# URI required
 		with self.assertRaises(clip.ClipExit):
 			cli.app.run('download')
@@ -42,6 +48,10 @@ class TestCli(BaseTest):
 		run.assert_called_with('something', os.getcwd())
 		# Specified dest
 		cli.app.run('download something -d here')
+		run.assert_called_with('something', 'here')
+		# Custom AWS profile
+		cli.app.run('-p aws download something -d here')
+		profile.assert_called_with(profile_name='aws')
 		run.assert_called_with('something', 'here')
 
 	@patch('lfm.cli.init.run')

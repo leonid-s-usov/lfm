@@ -1,5 +1,6 @@
 import os
 
+import boto3
 import clip
 
 import deploy
@@ -22,10 +23,11 @@ def print_version(value):
 
 @app.main(description='The AWS Lambda Function Manager')
 @clip.flag('--version', callback=print_version, hidden=True, help='Print the version')
+@clip.opt('-p', '--profile', help='Set the AWS profile to use', inherit_only=True)
 def lfm():
 	pass
 
-@lfm.subcommand(name='deploy', description='Deploy a Lambda function')
+@lfm.subcommand(name='deploy', description='Deploy a Lambda function', inherits=['-p'])
 @clip.arg('uri', default=os.getcwd(), help='URI of the function to deploy')
 @clip.opt('-n', '--name', name='FunctionName', help='Name of the function')
 @clip.opt('-r', '--role', name='Role', help='ARN of the function\'s IAM role')
@@ -35,12 +37,17 @@ def lfm():
 @clip.opt('-o', '--timeout', name='Timeout', type=int, help='Function execution time')
 @clip.opt('-s', '--size', name='MemorySize', type=int, help='Function memory (MB)')
 def lfm_deploy(uri, **kwargs):
+	if kwargs['profile'] is not None:
+		boto3.setup_default_session(profile_name=kwargs['profile'])
+		del kwargs['profile']
 	deploy.run(uri, {k: v for k, v in utils.iteritems(kwargs) if v})
 
-@lfm.subcommand(name='download', description='Download a Lambda function locally')
+@lfm.subcommand(name='download', description='Download a Lambda function locally', inherits=['-p'])
 @clip.arg('uri', required=True, help='URI of the function to download')
 @clip.opt('-d', '--dest', default=os.getcwd(), help='Where to download the function')
-def lfm_download(uri, dest):
+def lfm_download(uri, dest, profile):
+	if profile is not None:
+		boto3.setup_default_session(profile_name=profile)
 	download.run(uri, dest)
 
 @lfm.subcommand(name='init', description='Interactively create a .lambda.yml file')
