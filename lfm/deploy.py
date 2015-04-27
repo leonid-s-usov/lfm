@@ -14,18 +14,43 @@ from lambda_config import LambdaConfig
 def upload(params):
 	zipfile = params['FunctionName']
 	utils.make_zip(zipfile)  # Zip up directory
+	with open(zipfile + ".zip", 'rb') as f:
+		zip_bytes = f.read()
+	# Now we're ready to upload!
 	clip.echo('Deploying function "{}"...'.format(zipfile))
 	client = boto3.client('lambda')
-	with open(zipfile + ".zip", 'rb') as f:
+	upsert = params.pop('upsert', False)
+	try:
+		if upsert:
+			# We can override an existing function, check if we need to
+			try:
+				client.get_function_configuration(FunctionName=zipfile)
+				# If we made it here, we need to update
+				response = client.update_function_code(FunctionName=zipfile, ZipFile=zip_bytes)
+				clip.echo('Update code response: {}'.format(
+					response['ResponseMetadata']['HTTPStatusCode']
+				))
+				params.pop('Runtime', None)
+				response = client.update_function_configuration(**params)
+				clip.echo('Update configuration response: {}'.format(
+					response['ResponseMetadata']['HTTPStatusCode']
+				))
+				clip.echo('ARN: {}'.format(response['FunctionArn']))
+				return
+			except Exception as e:
+				if 'ResourceNotFoundException' not in str(e):
+					raise e
+		# Create the function from scratch
 		params['Code'] = {
-			'ZipFile': f.read()
+			'ZipFile': zip_bytes
 		}
-		try:
-			response = client.create_function(**params)
-			clip.echo('Response: {}'.format(response['ResponseMetadata']['HTTPStatusCode']))
-			clip.echo('ARN: {}'.format(response['FunctionArn']))
-		except Exception as e:
-			clip.exit(e, err=True)
+		response = client.create_function(**params)
+		clip.echo('Create response: {}'.format(
+			response['ResponseMetadata']['HTTPStatusCode']
+		))
+		clip.echo('ARN: {}'.format(response['FunctionArn']))
+	except Exception as e:
+		clip.exit(e, err=True)
 
 def deploy_dir(path, kwargs):
 	with utils.directory(path):

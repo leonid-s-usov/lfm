@@ -36,6 +36,7 @@ def lfm():
 @clip.opt('-t', '--runtime', name='Runtime', help='Runtime environment for the Lambda function')
 @clip.opt('-o', '--timeout', name='Timeout', type=int, help='Function execution time')
 @clip.opt('-s', '--size', name='MemorySize', type=int, help='Function memory (MB)')
+@clip.flag('--upsert', help='Allow deploying to an existing function')
 def lfm_deploy(uri, **kwargs):
 	if kwargs['profile'] is not None:
 		boto3.setup_default_session(profile_name=kwargs['profile'])
